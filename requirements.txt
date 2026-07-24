@@ -1,0 +1,4 @@
+PySide2==5.15.2.1
+numpy==1.21.4
+opencv-python==4.7.0.72
+matplotlib==3.5.3
