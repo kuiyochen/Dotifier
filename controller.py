@@ -1,11 +1,16 @@
 """Dotifier controller that coordinates view events and model operations."""
 
 from __future__ import annotations
+import logging
 from pathlib import Path
-from PySide2.QtWidgets import QDialog
+
+from PySide6.QtWidgets import QDialog
 
 from model import DotifierModel
 from view import ExportPictureDialog, LicenseDialog, ProcessMultiplePicturesDialog
+
+
+logger = logging.getLogger(__name__)
 
 
 class DotifierController:
@@ -31,7 +36,8 @@ class DotifierController:
             self.model.set_parameters(self.view.read_parameters())
             if self.model.parameters["preview"] and self.model.original_image is not None:
                 self._calculate_and_present()
-        except Exception as exc:
+        except Exception:
+            logger.exception("Unable to update parameters")
             self.view.show_error("invalid_parameters")
 
     def calculate(self) -> None:
@@ -42,7 +48,8 @@ class DotifierController:
     def _calculate_and_present(self) -> None:
         try:
             self.view.show_image(self.model.calculate())
-        except Exception as exc:
+        except Exception:
+            logger.exception("Unable to calculate image")
             self.view.show_error("calculation_failed")
 
     def import_image(self) -> None:
@@ -54,7 +61,8 @@ class DotifierController:
             if self.model.parameters["preview"]:
                 image = self.model.calculate()
             self.view.show_image(image)
-        except Exception as exc:
+        except Exception:
+            logger.exception("Unable to import image")
             self.view.show_error("image_import_failed")
 
     def import_parameters(self) -> None:
@@ -67,7 +75,8 @@ class DotifierController:
             self.view.present_parameters(parameters)
             if parameters["preview"] and self.model.original_image is not None:
                 self._calculate_and_present()
-        except Exception as exc:
+        except Exception:
+            logger.exception("Unable to import parameters")
             self.view.show_error("parameter_import_failed")
 
     def export_parameters(self) -> None:
@@ -78,7 +87,8 @@ class DotifierController:
             self.model.set_parameters(self.view.read_parameters())
             self.model.save_parameters(path, self.model.parameters)
             self.view.show_info("parameters_saved")
-        except Exception as exc:
+        except Exception:
+            logger.exception("Unable to export parameters")
             self.view.show_error("parameter_export_failed")
 
     def export_image(self) -> None:
@@ -90,7 +100,7 @@ class DotifierController:
             recalculated = False
             if self.model.result_is_stale:
                 dialog = ExportPictureDialog(self.view)
-                if dialog.exec_() != QDialog.Accepted:
+                if dialog.exec() != QDialog.DialogCode.Accepted:
                     return
                 recalculated = dialog.strategy == ExportPictureDialog.RECALCULATE
             path = self.view.choose_save_image()
@@ -99,12 +109,13 @@ class DotifierController:
             image = self.model.calculate() if recalculated else self.model.current_image
             self.model.save_image(path, image)
             self.view.show_info("image_saved")
-        except Exception as exc:
+        except Exception:
+            logger.exception("Unable to export image")
             self.view.show_error("image_export_failed")
 
     def process_multiple_images(self) -> None:
         dialog = ProcessMultiplePicturesDialog(self.view)
-        if dialog.exec_() != QDialog.Accepted:
+        if dialog.exec() != QDialog.DialogCode.Accepted:
             return
         try:
             if not dialog.output_folder:
@@ -119,12 +130,13 @@ class DotifierController:
             parameters = self.model.load_parameters(dialog.parameter_path) if dialog.parameter_path else self.view.read_parameters()
             succeeded, failures = self.model.batch_process(paths, dialog.output_folder, parameters)
             self.view.show_info("batch_complete", succeeded=succeeded, failed=len(failures))
-        except Exception as exc:
+        except Exception:
+            logger.exception("Unable to batch process images")
             self.view.show_error("batch_processing_failed")
 
     def show_about(self) -> None:
         license_path = Path(__file__).resolve().parent / "LICENSE"
         with open(license_path, "r", encoding="utf-8") as license_file:
             text = license_file.read()
-        LicenseDialog(self.view, text).exec_()
+        LicenseDialog(self.view, text).exec()
         

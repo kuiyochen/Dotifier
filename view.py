@@ -6,15 +6,15 @@ import json
 from pathlib import Path
 from typing import Any
 
-from PySide2.QtCore import Property, QPropertyAnimation, Qt, Signal
-from PySide2.QtGui import QColor, QPainter
-from PySide2.QtWidgets import (
-    QAction, QCheckBox, QComboBox, QDialog, QDialogButtonBox, QFileDialog,
+from PySide6.QtCore import Property, QPropertyAnimation, Qt, Signal
+from PySide6.QtGui import QAction, QColor, QPainter
+from PySide6.QtWidgets import (
+    QCheckBox, QComboBox, QDialog, QDialogButtonBox, QFileDialog,
     QHBoxLayout, QLabel, QLineEdit, QMainWindow, QMessageBox, QPushButton,
     QSpinBox, QSplitter, QTextBrowser, QVBoxLayout, QWidget,
 )
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
+from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qtagg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
 
 
@@ -134,14 +134,14 @@ class TriStateToggle(QWidget):
 
     def mouseReleaseEvent(self, event):
         width = self.width() / 3
-        self.set_state(int(event.pos().x() // width))
+        self.set_state(int(event.position().x() // width))
         super().mouseReleaseEvent(event)
 
     def paintEvent(self, event):
         painter = QPainter(self)
-        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         rect = self.rect().adjusted(1, 1, -1, -1)
-        painter.setPen(Qt.NoPen)
+        painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(QColor("#E5E5EA"))
         painter.drawRoundedRect(rect, rect.height() / 2, rect.height() / 2)
         segment = rect.width() / 3
@@ -151,7 +151,7 @@ class TriStateToggle(QWidget):
         for index, label in enumerate(self.labels):
             text_rect = rect.adjusted(int(index * segment), 0, -int((2 - index) * segment), 0)
             painter.setPen(QColor("white") if index == self._state else QColor("#555555"))
-            painter.drawText(text_rect, Qt.AlignCenter, label)
+            painter.drawText(text_rect, Qt.AlignmentFlag.AlignCenter, label)
 
 
 class InteractiveCurveCanvas(FigureCanvas):
@@ -265,7 +265,7 @@ class LicenseDialog(QDialog):
         self.resize(600, 450)
         layout = QVBoxLayout(self)
         browser = QTextBrowser(self); browser.setPlainText(text); layout.addWidget(browser)
-        buttons = QDialogButtonBox(QDialogButtonBox.Close, self); buttons.rejected.connect(self.reject); layout.addWidget(buttons)
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Close, self); buttons.rejected.connect(self.reject); layout.addWidget(buttons)
 
 
 class ExportPictureDialog(QDialog):
@@ -301,7 +301,7 @@ class ProcessMultiplePicturesDialog(QDialog):
         layout.addLayout(self._row(tr("process_multiple_pictures_dialog1"), [(tr("process_multiple_pictures_dialog1_mode1"), self.choose_files), (tr("process_multiple_pictures_dialog1_mode2"), self.choose_folder)], self.input_display))
         layout.addLayout(self._row(tr("process_multiple_pictures_dialog2"), [(tr("select_output_folder"), self.choose_output)], self.output_display))
         layout.addLayout(self._row(tr("process_multiple_pictures_dialog3"), [(tr("current_parameter"), self.use_current), (tr("select_parameter_file"), self.choose_parameter)], self.parameter_display))
-        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, self)
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel, self)
         buttons.accepted.connect(self.accept); buttons.rejected.connect(self.reject); layout.addWidget(buttons)
 
     def _row(self, title, buttons, display):
@@ -370,7 +370,7 @@ class DotifierView(QMainWindow):
         self.about_action.triggered.connect(self.aboutRequested)
 
     def _build_content(self):
-        splitter = QSplitter(Qt.Horizontal, self); self.setCentralWidget(splitter)
+        splitter = QSplitter(Qt.Orientation.Horizontal, self); self.setCentralWidget(splitter)
         left = QWidget(self); controls = QVBoxLayout(left)
         self.mode_toggle = TriStateToggle(parent=left); controls.addWidget(self.mode_toggle)
         self.scale = self._spin_row(controls, tr("scale"), 10, 500, 100, 10)
@@ -429,7 +429,7 @@ class DotifierView(QMainWindow):
         if event.button == 1 and self._image_navigation_available(event):
             self._image_drag_position = (event.xdata, event.ydata)
             self._image_dragged = False
-            self.image_canvas.setCursor(Qt.ClosedHandCursor)
+            self.image_canvas.setCursor(Qt.CursorShape.ClosedHandCursor)
 
     def _drag_image(self, event):
         if self._image_drag_position is None:

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import copy
 import json
+import logging
 from pathlib import Path
 from typing import Any, Iterable
 
@@ -12,6 +13,7 @@ import numpy as np
 
 
 IMAGE_SUFFIXES = {".png", ".jpg", ".jpeg", ".bmp"}
+logger = logging.getLogger(__name__)
 
 
 def default_parameters() -> dict[str, Any]:
@@ -207,5 +209,6 @@ class DotifierModel:
                 self.save_image(str(output / f"{path.stem}_processed{path.suffix}"), result)
                 succeeded += 1
             except Exception as exc:  # individual files must not abort a batch
+                logger.exception("Unable to process batch image: %s", input_path)
                 failures.append(f"{input_path}: {exc}")
         return succeeded, failures
