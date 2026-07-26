@@ -108,7 +108,7 @@ class DotifierModel:
         )
 
     def load_image(self, file_path: str) -> np.ndarray:
-        image = cv2.imread(file_path, cv2.IMREAD_COLOR)
+        image = cv2.imdecode(np.fromfile(file_path, dtype=np.uint8), cv2.IMREAD_COLOR)
         if image is None:
             raise ValueError(f"Unable to read image: {file_path}")
         self.original_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -185,8 +185,10 @@ class DotifierModel:
     @staticmethod
     def save_image(file_path: str, image: np.ndarray) -> None:
         output = cv2.cvtColor(image, cv2.COLOR_RGB2BGR) if image.ndim == 3 else image
-        if not cv2.imwrite(file_path, output):
+        success, encoded_img = cv2.imencode(file_path, output)
+        if not success:
             raise ValueError(f"Unable to save image: {file_path}")
+        encoded_img.tofile(file_path)
 
     @staticmethod
     def image_files(folder: str) -> list[str]:
@@ -200,7 +202,7 @@ class DotifierModel:
         succeeded, failures = 0, []
         for input_path in input_paths:
             try:
-                raw = cv2.imread(input_path, cv2.IMREAD_COLOR)
+                raw = cv2.imdecode(np.fromfile(input_path, dtype=np.uint8), cv2.IMREAD_COLOR)
                 if raw is None:
                     raise ValueError("Unable to read image.")
                 image = cv2.cvtColor(raw, cv2.COLOR_BGR2RGB)
