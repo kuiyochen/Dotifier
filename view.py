@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
+import base64
 import json
 from pathlib import Path
 from typing import Any
 
 from PySide6.QtCore import Property, QPropertyAnimation, Qt, Signal
-from PySide6.QtGui import QAction, QColor, QPainter
+from PySide6.QtGui import QAction, QColor, QPainter, QIcon, QPixmap, QTransform
 from PySide6.QtWidgets import (
     QCheckBox, QComboBox, QDialog, QDialogButtonBox, QFileDialog,
     QHBoxLayout, QLabel, QLineEdit, QMainWindow, QMessageBox, QPushButton,
@@ -379,8 +380,13 @@ class DotifierView(QMainWindow):
         self.staggered = QCheckBox(tr("staggered"), left); self.staggered.setChecked(True); controls.addWidget(self.staggered)
         self.inversion = QCheckBox(tr("inversion"), left); controls.addWidget(self.inversion)
         self.preset = QComboBox(left); self.preset.addItems([tr("Linear"), tr("Sigmoid_like"), tr("Reversed_Sigmoid_like"), tr("Log_like"), tr("Exp_like")]); controls.addWidget(self.preset)
-        self.undo_button, self.redo_button = QPushButton(tr("undo"), left), QPushButton(tr("redo"), left)
+        self.undo_button, self.redo_button = QPushButton("", left), QPushButton("", left)
         curve_container = QWidget();curve_container.setStyleSheet("background-color: #ffffff;")
+        base64_undo_png = "iVBORw0KGgoAAAANSUhEUgAAACQAAAAdCAMAAAD1qz7PAAAAQlBMVEVHcEwBAQEAAAAAAAABAQEBAQEBAQEBAQEBAQEBAQEAAAABAQEBAQEBAQEBAQEAAAAAAAABAQEAAAABAQEAAAAAAABN2i5gAAAAFXRSTlMABWe68SFBGK/H+eYyl4ZMVdUPdGoSZifKAAAAyklEQVQ4y8WT2RKDIAxFAQHZQTT//6tNW6ogTvGhM71vyZwsJISQ/2oWQtBvAJVBLdZa5dPcBc8FURwMvGQ0O2FsejqE51BLy6YqA6TcAifxtYVAxY7BmittIOBwIc5a6AhH7cYiLiCjfZIyeWWLI/SQjrkMzIU3xuUZOjwoqdtUeyZVD1C8KJ27nnrKflrf4JqSOBeTihGnQ6zet8ewbbcq1atwmIqN/laebkAkAHdDKBorhpDjit6AtvFVRD2uRtbx2/A08o8P9gG12xQrYq8khQAAAABJRU5ErkJggg=="
+        pixmap = QPixmap(); pixmap.loadFromData(base64.b64decode(base64_undo_png))
+        flipped_pixmap = pixmap.transformed(QTransform().scale(-1, 1))
+        icon = QIcon(pixmap); self.undo_button.setIcon(icon)
+        flipped_icon = QIcon(flipped_pixmap); self.redo_button.setIcon(flipped_icon)
         self.undo_button.setStyleSheet("padding: 4px 8px;border: 2px solid #aaaaaa;border-radius: 6px;")
         self.redo_button.setStyleSheet("padding: 4px 8px;border: 2px solid #aaaaaa;border-radius: 6px;")
         curve_Vlayout = QVBoxLayout(curve_container)
