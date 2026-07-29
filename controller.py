@@ -47,7 +47,7 @@ class DotifierController:
 
     def _calculate_and_present(self) -> None:
         try:
-            self.view.show_image(self.model.calculate())
+            self.view.show_image(self.model.calculate(), preserve_navigation=True)
         except Exception:
             logger.exception("Unable to calculate image")
             self.view.show_error("calculation_failed")

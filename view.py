@@ -399,7 +399,8 @@ class DotifierView(QMainWindow):
         right = QWidget(self); right_layout = QVBoxLayout(right)
         self.figure = Figure(); self.image_canvas = FigureCanvas(self.figure); self.image_axes = self.figure.add_subplot(111)
         self.toolbar = CustomNavigationToolbar(self.image_canvas, right)
-        self._image_drag_position = None
+        self._image_drag_start = None
+        self._image_drag_limits = None
         self._image_dragged = False
         self._image_base_spans = None
         self._connect_image_navigation()
@@ -433,28 +434,33 @@ class DotifierView(QMainWindow):
 
     def _start_image_drag(self, event):
         if event.button == 1 and self._image_navigation_available(event):
-            self._image_drag_position = (event.xdata, event.ydata)
+            self._image_drag_start = (event.x, event.y)
+            self._image_drag_limits = (
+                self.image_axes.get_xlim(),
+                self.image_axes.get_ylim(),
+            )
             self._image_dragged = False
             self.image_canvas.setCursor(Qt.CursorShape.ClosedHandCursor)
 
     def _drag_image(self, event):
-        if self._image_drag_position is None:
+        if self._image_drag_start is None or self._image_drag_limits is None:
             return
         if not self._image_navigation_available(event):
             return
-        previous_x, previous_y = self._image_drag_position
-        offset_x, offset_y = previous_x - event.xdata, previous_y - event.ydata
-        x_start, x_end = self.image_axes.get_xlim()
-        y_start, y_end = self.image_axes.get_ylim()
+        start_x, start_y = self._image_drag_start
+        (x_start, x_end), (y_start, y_end) = self._image_drag_limits
+        axes_bounds = self.image_axes.bbox
+        offset_x = -(event.x - start_x) * (x_end - x_start) / axes_bounds.width
+        offset_y = -(event.y - start_y) * (y_end - y_start) / axes_bounds.height
         self.image_axes.set_xlim(x_start + offset_x, x_end + offset_x)
         self.image_axes.set_ylim(y_start + offset_y, y_end + offset_y)
-        self._image_drag_position = (event.xdata, event.ydata)
         self._image_dragged = self._image_dragged or offset_x != 0 or offset_y != 0
         self.image_canvas.draw_idle()
 
     def _end_image_drag(self, event):
-        if self._image_drag_position is not None:
-            self._image_drag_position = None
+        if self._image_drag_start is not None:
+            self._image_drag_start = None
+            self._image_drag_limits = None
             self.image_canvas.unsetCursor()
             if self._image_dragged:
                 self.toolbar.push_current()
@@ -507,7 +513,43 @@ class DotifierView(QMainWindow):
         finally:
             self._building = False
 
-    def show_image(self, image):
+    def _image_view_state(self):
+        """Return the current view as ratios within the displayed image extent."""
+        if not self.image_axes.images:
+            return None
+        x_min, x_max, y_min, y_max = self.image_axes.images[-1].get_extent()
+        x_start, x_end = self.image_axes.get_xlim()
+        y_start, y_end = self.image_axes.get_ylim()
+        x_span, y_span = x_max - x_min, y_max - y_min
+        if x_span == 0 or y_span == 0:
+            return None
+        return (
+            ((x_start + x_end) / 2 - x_min) / x_span,
+            (x_end - x_start) / x_span,
+            ((y_start + y_end) / 2 - y_min) / y_span,
+            (y_end - y_start) / y_span,
+        )
+
+    def _restore_image_view_state(self, view_state):
+        """Restore a relative view after an image with a different size is drawn."""
+        if view_state is None:
+            return
+        x_min, x_max, y_min, y_max = self.image_axes.images[-1].get_extent()
+        x_center_ratio, x_scale, y_center_ratio, y_scale = view_state
+        x_span, y_span = x_max - x_min, y_max - y_min
+        x_center = x_min + x_center_ratio * x_span
+        y_center = y_min + y_center_ratio * y_span
+        self.image_axes.set_xlim(
+            x_center - x_scale * x_span / 2,
+            x_center + x_scale * x_span / 2,
+        )
+        self.image_axes.set_ylim(
+            y_center - y_scale * y_span / 2,
+            y_center + y_scale * y_span / 2,
+        )
+
+    def show_image(self, image, preserve_navigation=False):
+        view_state = self._image_view_state() if preserve_navigation else None
         self.image_axes.clear()
         if image.ndim == 2: self.image_axes.imshow(image, cmap="gray", vmin=0, vmax=255)
         else: self.image_axes.imshow(image)
@@ -518,6 +560,9 @@ class DotifierView(QMainWindow):
         self._image_base_spans = (abs(x_end - x_start), abs(y_end - y_start))
         self.toolbar.update()
         self.toolbar.push_current()
+        self._restore_image_view_state(view_state)
+        if view_state is not None:
+            self.toolbar.push_current()
         self.image_canvas.draw_idle()
 
     def choose_open_image(self):
