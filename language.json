@@ -26,7 +26,7 @@
     "dotify": "點陣",
     "scale": "放大倍率(%)",
     "discrete_level": "灰階階數",
-    "points_density": "打點密度",
+    "points_density": "打點間隔",
     "staggered": "點錯位",
     "inversion": "負片效果",
     "Linear": "線性",
