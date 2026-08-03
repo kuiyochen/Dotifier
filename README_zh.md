@@ -27,7 +27,7 @@ python main.py
 ```
 即可開始使用。
 
-如果沒有安裝Python，可使用[免安裝執行檔](link之後補)。此免安裝執行檔打包於 Windows 11。語言問題請參閱[語言包設定方法](#語言包設定方法)。
+如果沒有安裝Python，可使用[免安裝執行檔](https://mega.nz/file/DYomCbhY#qe5iFP-DqsKh07iV0LNto_6TP8a7fKmU14UWk4y8fPE)。此免安裝執行檔打包於 Windows 11。語言問題請參閱[語言包設定方法](#語言包設定方法)。
 
 (如果免安裝檔連結失效，歡迎自行使用PyInstaller之類的Python打包器重新打包，但注意不能使用 ``--onefile`` 指令，這與授權違背。)
 

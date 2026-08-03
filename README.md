@@ -27,7 +27,7 @@ python main.py
 ```
 to start using the application.
 
-If you do not have Python installed, you can use the [Portable Executable](link_to_be_added_later). This portable executable was packaged on Windows 11. For language settings, please refer to [Language Pack Configuration](#language-pack-configuration).
+If you do not have Python installed, you can use the [Portable Executable](https://mega.nz/file/DYomCbhY#qe5iFP-DqsKh07iV0LNto_6TP8a7fKmU14UWk4y8fPE). This portable executable was packaged on Windows 11. For language settings, please refer to [Language Pack Configuration](#language-pack-configuration).
 
 (If the portable executable link is broken, feel free to repackage it yourself using a Python bundler like PyInstaller. However, note that you must NOT use the `--onefile` option, as doing so violates the license.)
 
